@@ -23,3 +23,26 @@ class ListViewTests(TestCase):
             result,
             ['<Page: Test>']
         )
+
+    def test_create_page(self):
+        # Instance of user to test the pages
+        user = User.objects.create()
+
+        # Post data to be sent via the form
+        post_data = {
+            'title': 'Test2',
+            'content': 'test2 content',
+            'author': user.id
+        }
+
+        # Request to create a post
+        res = self.client.post('/create/', post_data=post_data)
+
+        # Check if we got a 302
+        self.assertEqual(res.status_code, 302)
+
+        # Get object to test
+        page_object = Page.objects.get(title='Test2')
+
+        # Check that the page object was created in the test db
+        self.assertEqual(item.title, 'Test2')
