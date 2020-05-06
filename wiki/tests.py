@@ -36,12 +36,13 @@ class WikiTests(TestCase):
         }
 
         # Request to create a post
-        res = self.client.post('/create/', post_data=post_data)
+        res = self.client.post('/create/', data=post_data)
 
-        self.assertEqual(res.status_code, 200)
+        # Verify our response
+        self.assertEqual(res.status_code, 302)
 
         # Get object to test
         page_object = Page.objects.get(title='Test')
 
         # Check that the page object was created in the test db
-        self.assertEqual(item.title, 'Test')
+        self.assertEqual(page_object.title, 'Test')
