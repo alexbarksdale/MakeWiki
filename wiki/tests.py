@@ -1,9 +1,29 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from wiki.models import Page
+from django.utils.text import slugify
 
 
 class WikiTests(TestCase):
+    def test_edit(self):
+        user = User.objects.create_user(
+            username='admin', password='djangopony')
+        self.client.login(username='admin', password='djangopony')
+
+        page = Page.objects.create(
+            title="My Test Page", content="test", author=user)
+        page.save()
+        edit = {
+            'title': 'testing title',
+            'content': 'testing content'
+        }
+
+        response = self.client.post('/%s/' % slugify(page.title), edit)
+        updated = Page.objects.get(title=edit['title'])
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(updated.title, edit['title'])
+
     def test_detail_page(self):
         # Instance of user to test the pages
         user = User.objects.create()
