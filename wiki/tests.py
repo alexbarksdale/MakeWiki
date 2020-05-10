@@ -5,44 +5,52 @@ from django.utils.text import slugify
 
 
 class WikiTests(TestCase):
-    def test_edit(self):
+    def test_edit_page(self):
+        # Create a new user
         user = User.objects.create_user(
-            username='admin', password='djangopony')
-        self.client.login(username='admin', password='djangopony')
+            username='test', password='makeschool123')
+        # The edit form is only displayed if a user is logged in.
+        # Refer to the page.html in /wiki/templates/
+        self.client.login(username='test', password='makeschool123')
 
+        # Create our page
         page = Page.objects.create(
-            title="My Test Page", content="test", author=user)
-        page.save()
-        edit = {
-            'title': 'testing title',
-            'content': 'testing content'
+            title='Iron Man', content='Super smart guy', author=user)
+        page.save()  # save our page
+
+        # Our post data we're updating
+        post_data = {
+            'title': 'Batman',
+            'content': 'Scary man',
+            'author': user.id
         }
 
-        response = self.client.post('/%s/' % slugify(page.title), edit)
-        updated = Page.objects.get(title=edit['title'])
+        # Create a post request with our new data
+        res = self.client.post(f'/{slugify(page.title)}/', post_data)
 
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(updated.title, edit['title'])
+        # Check that the response code was sent properly
+        self.assertEqual(res.status_code, 302)
+
+        updated_data = Page.objects.get(title=post_data['title'])
+        # Check that our post data went through and updated the page
+        self.assertEqual(updated_data.title, 'Batman')
 
     def test_detail_page(self):
         # Instance of user to test the pages
         user = User.objects.create()
 
         # Create a test detail page
-        Page.objects.create(title="Test", content="test content", author=user)
+        page = Page.objects.create(title="Captain America",
+                                   content="100% Natural man", author=user)
+        page.save()  # save our page
 
-        # Making a GET request to the home page
-        res = self.client.get('/')
+        # Making a GET request to get our test detail page
+        res = self.client.get(f'/{slugify(page.title)}/')
 
         # Very a 200 response
         self.assertEqual(res.status_code, 200)
-        result = res.context['pages']
-
-        # Check if we got out test page
-        self.assertQuerysetEqual(
-            result,
-            ['<Page: Test>']
-        )
+        # Check if the page contains Captain America (our title)
+        self.assertContains(res, 'Captain America')
 
     def test_create_page(self):
         # Instance of user to test the pages
@@ -50,8 +58,8 @@ class WikiTests(TestCase):
 
         # Post data to be sent via the form
         post_data = {
-            'title': 'Test',
-            'content': 'test content',
+            'title': 'Avengers',
+            'content': 'Super strong heroes',
             'author': user.id
         }
 
@@ -62,7 +70,7 @@ class WikiTests(TestCase):
         self.assertEqual(res.status_code, 302)
 
         # Get object to test
-        page_object = Page.objects.get(title='Test')
+        page_object = Page.objects.get(title='Avengers')
 
-        # Check that the page object was created in the test db
-        self.assertEqual(page_object.title, 'Test')
+        # Check that the page object was created. Checking if the page title matches Avengers.
+        self.assertEqual(page_object.title, 'Avengers')
